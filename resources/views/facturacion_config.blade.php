@@ -7,6 +7,8 @@
 $hoy = date('Y-m-d');
 $fin = $configuracion['fecha_fin_vigencia'] ?? null;
 $ini = $configuracion['fecha_inicio_vigencia'] ?? null;
+$iniInput = $ini ? date('Y-m-d', strtotime((string) $ini)) : '';
+$finInput = $fin ? date('Y-m-d', strtotime((string) $fin)) : '';
 
 if ($fin && $ini && $hoy >= $ini && $hoy <= $fin) {
     $estadoTimbrado = ['tipo' => 'vigente', 'texto' => 'Vigente', 'icono' => 'fa-check-circle', 'color' => 'success'];
@@ -180,7 +182,7 @@ $numeroFacturaPreview =
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
                                     <input type="date" name="fecha_inicio_vigencia" class="form-control" required
-                                        value="{{ $configuracion['fecha_inicio_vigencia'] }}">
+                                        value="{{ $iniInput }}">
                                 </div>
                             </div>
 
@@ -189,7 +191,7 @@ $numeroFacturaPreview =
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-calendar-times"></i></span>
                                     <input type="date" name="fecha_fin_vigencia" class="form-control" required
-                                        value="{{ $configuracion['fecha_fin_vigencia'] }}">
+                                        value="{{ $finInput }}">
                                 </div>
                             </div>
 

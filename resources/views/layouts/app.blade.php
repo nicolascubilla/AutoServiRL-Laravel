@@ -114,6 +114,10 @@
                     <i class="nav-icon fas fa-key"></i>
                     <span class="nav-text">Cambiar Contraseña</span>
                 </a>
+                <a href="/manual/MANUAL_USUARIO_AUTOSERVICE.pdf" target="_blank" class="nav-link">
+                    <i class="nav-icon fas fa-book"></i>
+                    <span class="nav-text">Manual de Usuario</span>
+                </a>
             </nav>
         </div>
     </aside>
