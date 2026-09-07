@@ -22,7 +22,7 @@ class TicketController extends Controller
                 'v.estado',
                 'u.nombre_completo AS cajero',
                 'vp.forma_pago',
-                'vp.monto AS monto_pagado'
+                DB::raw('COALESCE(v.monto_recibido, vp.monto) AS monto_pagado')
             )
             ->join('usuarios as u', 'u.id_usuario', '=', 'v.usuario_id')
             ->leftJoin('venta_pagos as vp', 'vp.venta_id', '=', 'v.venta_id')

@@ -110,6 +110,10 @@
                 <div class="sb-section">
                     <span class="sb-section-title">Sistema</span>
                 </div>
+                <a href="{{ route('usuarios') }}" class="nav-link">
+                    <i class="nav-icon fas fa-users"></i>
+                    <span class="nav-text">Usuarios</span>
+                </a>
                 <a href="{{ route('cambiar_contrasena') }}" class="nav-link">
                     <i class="nav-icon fas fa-key"></i>
                     <span class="nav-text">Cambiar Contraseña</span>
@@ -245,7 +249,7 @@ window.confirmar = function (opciones) {
         btnAceptar.className = 'btn ' + opts.acepClase;
         document.getElementById('confirmCancelar').innerHTML = opts.cancelText;
         var resuelto = false;
-        function resolver(valor) { if (resuelto) return; resuelto = true; resolve(valor); }
+        function resolver(valor) { if (resuelto) return; resuelto = true; bootstrap.Modal.getOrCreateInstance(modal).hide(); resolve(valor); }
         btnAceptar.onclick = function () { resolver(true); };
         document.getElementById('confirmCancelar').onclick = function () { resolver(false); };
         modal.addEventListener('hidden.bs.modal', function handler() {

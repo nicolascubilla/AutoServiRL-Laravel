@@ -146,6 +146,14 @@
                     </div>
                 @endif
 
+                @if (session('success'))
+                    <div class="alert-error" id="alert-success"
+                        style="background:#f0fdf4;color:#15803d;border-color:#bbf7d0;">
+                        <i class="fas fa-check-circle"></i>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login.submit') }}" id="loginForm">
                     @csrf
                     <div class="field">
@@ -167,6 +175,12 @@
                         Iniciar Sesión
                     </button>
                 </form>
+
+                <div class="text-center mt-3">
+                    <a href="{{ route('password.forgot') }}" style="color:#17a2b8;font-size:0.9rem;text-decoration:none;font-weight:600;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
 
                 <div class="form-foot">
                     AutoServiRL &copy; 2026

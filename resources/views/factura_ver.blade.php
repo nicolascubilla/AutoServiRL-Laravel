@@ -156,11 +156,6 @@ foreach ($detalle as $item) { $totalCantidad += (float)($item->cantidad ?? 0); }
                     </div>
                 </div>
             </div>
-
-            <div class="text-center text-muted small mt-4">
-                <i class="fas fa-heart me-1 text-danger"></i> ¡Gracias por su compra!
-            </div>
-
         </div>
     </div>
 

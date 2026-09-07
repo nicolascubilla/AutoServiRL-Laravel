@@ -511,7 +511,7 @@ foreach ($detalle as $item) {
 
         <div class="pie">
             <div class="gracias">¡Gracias por su compra!</div>
-            Documento emitido por el sistema AutoServiRL &mdash; Este comprobante no tiene validez fiscal para la deducción del IVA.
+            Documento emitido por el sistema AutoServiRL
         </div>
 
         <div class="botones">

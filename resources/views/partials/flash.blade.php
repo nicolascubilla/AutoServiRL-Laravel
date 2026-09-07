@@ -13,3 +13,17 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('mensajeSuccess');
+    if (el) {
+        setTimeout(function () {
+            var alert = bootstrap.Alert.getOrCreateInstance(el);
+            if (alert) {
+                alert.close();
+            }
+        }, 4000);
+    }
+});
+</script>

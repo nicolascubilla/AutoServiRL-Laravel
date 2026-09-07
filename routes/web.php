@@ -10,6 +10,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\VentaController;
+use App\Http\Controllers\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+/*
+|--------------------------------------------------------------------------
+| Recuperación de contraseña
+|--------------------------------------------------------------------------
+*/
+Route::get('/olvide-contrasena', [PasswordResetController::class, 'showForgotForm'])->name('password.forgot');
+Route::post('/olvide-contrasena', [PasswordResetController::class, 'enviarCodigo'])->name('password.enviar');
+Route::get('/olvide-contrasena/verificar', [PasswordResetController::class, 'showVerificarForm'])->name('password.verificar');
+Route::post('/olvide-contrasena/restablecer', [PasswordResetController::class, 'restablecer'])->name('password.restablecer');
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +86,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/informes/imprimir', [InformeController::class, 'imprimir'])->name('informes.imprimir');
 
     // Usuario
+    Route::get('/usuarios', [UsuarioController::class, 'listar'])->name('usuarios');
+    Route::post('/usuarios/guardar', [UsuarioController::class, 'crear'])->name('usuarios.guardar');
     Route::get('/cambiar-contrasena', [UsuarioController::class, 'cambiarContrasenaForm'])->name('cambiar_contrasena');
     Route::post('/cambiar-contrasena', [UsuarioController::class, 'cambiarContrasena'])->name('cambiar_contrasena_guardar');
 });

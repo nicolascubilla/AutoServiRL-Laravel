@@ -235,7 +235,10 @@ class VentaController extends Controller
             }
 
             // 6. Actualizar total de venta
-            DB::table('ventas')->where('venta_id', $venta_id)->update(['total' => $total]);
+            DB::table('ventas')->where('venta_id', $venta_id)->update([
+                'total' => $total,
+                'monto_recibido' => $forma_pago === 'E' ? $monto_recibido : null,
+            ]);
 
             // 7. Validar pago
             if ($forma_pago === 'E') {
