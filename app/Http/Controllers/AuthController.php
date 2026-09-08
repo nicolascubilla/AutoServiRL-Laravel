@@ -21,7 +21,11 @@ class AuthController extends Controller
     {
         $credentials = $request->only('usuario', 'contrasena');
 
-        if (Auth::attempt(['usuario' => $credentials['usuario'], 'password' => $credentials['contrasena']])) {
+        if (Auth::attempt([
+            'usuario' => $credentials['usuario'],
+            'password' => $credentials['contrasena'],
+            'estado' => 'A',
+        ])) {
             $user = Auth::user();
             Session::put('user_id', $user->id_usuario);
             Session::put('usuario', $user->usuario);

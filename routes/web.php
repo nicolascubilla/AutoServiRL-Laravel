@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
     // Usuario
     Route::get('/usuarios', [UsuarioController::class, 'listar'])->name('usuarios');
     Route::post('/usuarios/guardar', [UsuarioController::class, 'crear'])->name('usuarios.guardar');
+    Route::post('/usuarios/estado', [UsuarioController::class, 'cambiarEstado'])->name('usuarios.estado');
+    Route::post('/usuarios/editar', [UsuarioController::class, 'editar'])->name('usuarios.editar');
     Route::get('/cambiar-contrasena', [UsuarioController::class, 'cambiarContrasenaForm'])->name('cambiar_contrasena');
     Route::post('/cambiar-contrasena', [UsuarioController::class, 'cambiarContrasena'])->name('cambiar_contrasena_guardar');
 });

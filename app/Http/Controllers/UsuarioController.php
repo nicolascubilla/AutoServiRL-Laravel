@@ -106,4 +106,59 @@ class UsuarioController extends Controller
                 ->with('error', 'No fue posible crear el usuario.');
         }
     }
+
+    public function cambiarEstado(Request $request)
+    {
+        $id = (int) $request->input('id_usuario', 0);
+        $usuario = $id > 0 ? DB::table('usuarios')->where('id_usuario', $id)->first() : null;
+
+        if (!$usuario) {
+            return redirect()->route('usuarios')
+                ->with('error', 'El usuario no existe.');
+        }
+        $idActual = Auth::check() ? (int) Auth::id() : (int) session('user_id');
+        if ((int) $usuario->id_usuario === $idActual) {
+            return redirect()->route('usuarios')
+                ->with('error', 'No puede inactivar su propia cuenta.');
+        }
+
+        $nuevoEstado = $usuario->estado === 'A' ? 'I' : 'A';
+        DB::table('usuarios')->where('id_usuario', $id)->update(['estado' => $nuevoEstado]);
+
+        $accion = $nuevoEstado === 'A' ? 'activado' : 'inactivado';
+
+        return redirect()->route('usuarios')
+            ->with('success', "El usuario fue {$accion} correctamente.");
+    }
+
+    public function editar(Request $request)
+    {
+        $id = (int) $request->input('id_usuario', 0);
+        $nombre = trim((string) $request->input('nombre_completo', ''));
+
+        if ($id <= 0 || $nombre === '') {
+            return redirect()->route('usuarios')
+                ->with('error', 'Debe indicar el usuario y el nombre completo.');
+        }
+        if (strlen($nombre) > 100) {
+            return redirect()->route('usuarios')
+                ->with('error', 'El nombre completo no puede superar los 100 caracteres.');
+        }
+        if (!DB::table('usuarios')->where('id_usuario', $id)->exists()) {
+            return redirect()->route('usuarios')
+                ->with('error', 'El usuario no existe.');
+        }
+
+        try {
+            DB::table('usuarios')->where('id_usuario', $id)->update([
+                'nombre_completo' => $nombre,
+            ]);
+
+            return redirect()->route('usuarios')
+                ->with('success', 'Usuario actualizado correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios')
+                ->with('error', 'No fue posible actualizar el usuario.');
+        }
+    }
 }

@@ -38,6 +38,7 @@
                                 <th>Email</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Fecha de Creación</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,6 +56,37 @@
                                     </td>
                                     <td class="text-center">
                                         {{ date('d/m/Y H:i', strtotime($usuario->fecha_creacion)) }}
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" title="Editar nombre"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditar"
+                                            data-id="{{ $usuario->id_usuario }}"
+                                            data-usuario="{{ $usuario->usuario }}"
+                                            data-nombre="{{ $usuario->nombre_completo }}"
+                                            data-email="{{ $usuario->email }}">
+                                            <i class="fas fa-user-edit"></i>
+                                        </button>
+                                        <form method="POST" action="{{ route('usuarios.estado') }}" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="id_usuario" value="{{ $usuario->id_usuario }}">
+                                            @if($usuario->estado === 'A')
+                                                @if((int) $usuario->id_usuario === (int) auth()->id())
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" disabled title="No puede inactivar su propia cuenta">
+                                                        <i class="fas fa-user-slash"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Inactivar"
+                                                        onclick="confirmar({ titulo: 'Inactivar usuario', mensaje: '¿Desea inactivar al usuario &quot;{{ $usuario->usuario }}&quot;? No podrá iniciar sesión.', acepText: 'Inactivar', acepClase: 'btn-danger', icono: 'fa-user-slash', iconoClase: 'text-danger' }).then(ok => { if (ok) { this.closest('form').submit(); } });">
+                                                        <i class="fas fa-user-slash"></i>
+                                                    </button>
+                                                @endif
+                                            @else
+                                                <button type="button" class="btn btn-sm btn-outline-success" title="Activar"
+                                                    onclick="confirmar({ titulo: 'Activar usuario', mensaje: '¿Desea activar al usuario &quot;{{ $usuario->usuario }}&quot;?', acepText: 'Activar', acepClase: 'btn-success', icono: 'fa-user-check', iconoClase: 'text-success' }).then(ok => { if (ok) { this.closest('form').submit(); } });">
+                                                    <i class="fas fa-user-check"></i>
+                                                </button>
+                                            @endif
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach
@@ -136,6 +168,46 @@ MODAL NUEVO USUARIO
         </form>
     </div>
 </div>
+
+<!-- ===========================
+MODAL EDITAR USUARIO
+=========================== -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form id="frmEditar" method="POST" action="{{ route('usuarios.editar') }}" class="modal-content">
+            @csrf
+            <input type="hidden" id="editar_id" name="id_usuario">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-edit me-1"></i> Editar Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="editar_usuario" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-control" id="editar_email" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="editar_nombre">Nombre completo</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-id-card"></i></span>
+                        <input type="text" class="form-control" id="editar_nombre" name="nombre_completo" required
+                            maxlength="100" placeholder="Nombre y apellido">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -158,6 +230,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('contrasena_repite').addEventListener('input', function () {
         this.classList.remove('is-invalid');
+    });
+
+    var modalEditar = document.getElementById('modalEditar');
+    modalEditar.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        document.getElementById('editar_id').value = btn.getAttribute('data-id');
+        document.getElementById('editar_usuario').value = btn.getAttribute('data-usuario');
+        document.getElementById('editar_email').value = btn.getAttribute('data-email');
+        document.getElementById('editar_nombre').value = btn.getAttribute('data-nombre');
     });
 });
 </script>
