@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Ticket de Venta | Autoservice R &amp; L')
+@section('title', 'Ticket de Venta | Autoservice R & L')
 
 @section('content')
 @php

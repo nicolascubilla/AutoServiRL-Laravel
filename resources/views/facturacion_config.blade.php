@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Configuración de Facturación | Autoservice R &amp; L')
+@section('title', 'Configuración de Facturación | Autoservice R & L')
 
 @section('content')
 @php
