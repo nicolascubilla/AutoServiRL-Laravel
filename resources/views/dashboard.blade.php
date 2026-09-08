@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard | AutoServiRL')
+@section('title', 'Dashboard | Autoservice R &amp; L')
 
 @section('content')
 <?php

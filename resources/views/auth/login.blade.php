@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Iniciar Sesión | AutoServiRL</title>
+    <title>Iniciar Sesión | Autoservice R &amp; L</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -112,7 +112,7 @@
             <div class="image-content">
                 <div class="brand-top">
                     <i class="fas fa-shopping-cart"></i>
-                    AutoServiRL
+                    Autoservice R & L
                 </div>
                 <div class="image-text">
                     <div class="badge-line">
@@ -126,7 +126,7 @@
                     </p>
                 </div>
                 <div class="brand-footer">
-                    &copy; 2026 AutoServiRL &mdash; Todos los derechos reservados.
+                    &copy; 2026 Autoservice R & L &mdash; Todos los derechos reservados.
                 </div>
             </div>
         </div>
@@ -183,7 +183,7 @@
                 </div>
 
                 <div class="form-foot">
-                    AutoServiRL &copy; 2026
+                    Autoservice R & L &copy; 2026
                 </div>
             </div>
         </div>

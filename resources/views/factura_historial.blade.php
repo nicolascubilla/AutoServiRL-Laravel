@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Historial de Facturas | AutoServiRL')
+@section('title', 'Historial de Facturas | Autoservice R &amp; L')
 
 @section('content')
 @php

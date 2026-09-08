@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'AutoServiRL')</title>
+    <title>@yield('title', 'Autoservice R &amp; L')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ asset('assets/css/main-QHWFdn9T.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
