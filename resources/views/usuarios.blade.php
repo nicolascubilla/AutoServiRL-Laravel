@@ -146,6 +146,9 @@ MODAL NUEVO USUARIO
                         <span class="input-group-text bg-white"><i class="fas fa-lock"></i></span>
                         <input type="password" class="form-control" id="contrasena" name="contrasena"
                             required autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres">
+                        <button type="button" class="btn btn-outline-secondary toggle-pass-usuario" data-target="contrasena" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -155,6 +158,9 @@ MODAL NUEVO USUARIO
                         <span class="input-group-text bg-white"><i class="fas fa-check"></i></span>
                         <input type="password" class="form-control" id="contrasena_repite"
                             required autocomplete="new-password" minlength="6" placeholder="Repetí la contraseña">
+                        <button type="button" class="btn btn-outline-secondary toggle-pass-usuario" data-target="contrasena_repite" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         <div class="invalid-feedback" id="msgNoCoincide">Las contraseñas no coinciden.</div>
                     </div>
                 </div>
@@ -230,6 +236,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('contrasena_repite').addEventListener('input', function () {
         this.classList.remove('is-invalid');
+    });
+
+    document.querySelectorAll('.toggle-pass-usuario').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var campo = document.getElementById(this.getAttribute('data-target'));
+            var visible = campo.type === 'text';
+            campo.type = visible ? 'password' : 'text';
+            this.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+            this.innerHTML = visible ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
     });
 
     var modalEditar = document.getElementById('modalEditar');

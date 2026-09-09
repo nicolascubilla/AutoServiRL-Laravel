@@ -69,7 +69,7 @@
         .field { margin-bottom: 1.25rem; }
         .field label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem; }
         .input-wrapper { position: relative; }
-        .input-wrapper i {
+        .input-wrapper > i {
             position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
             color: #94a3b8; font-size: 0.95rem;
         }
@@ -79,6 +79,16 @@
             background: #fff; transition: border-color 0.2s, box-shadow 0.2s;
         }
         .input-wrapper input:focus { outline: none; border-color: #17a2b8; box-shadow: 0 0 0 4px rgba(23,162,184,0.12); }
+        .input-wrapper input.has-toggle { padding-right: 44px; }
+        .toggle-pass {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px;
+            background: none; border: none; color: #94a3b8; cursor: pointer;
+            font-size: 1rem; padding: 0; line-height: 1;
+        }
+        .toggle-pass:hover { color: #17a2b8; background: rgba(23,162,184,0.08); }
+        .toggle-pass:focus { outline: none; }
         .btn-login {
             width: 100%; padding: 0.85rem; border: none; border-radius: 12px;
             background: linear-gradient(135deg, #17a2b8, #0f8fa8); color: #fff;
@@ -167,7 +177,12 @@
                         <label for="contrasena">Contraseña</label>
                         <div class="input-wrapper">
                             <i class="fas fa-lock"></i>
-                            <input type="password" id="contrasena" name="contrasena" placeholder="Ingrese su contraseña" required>
+                            <input type="password" id="contrasena" name="contrasena" class="has-toggle"
+                                placeholder="Ingrese su contraseña" required>
+                            <button type="button" class="toggle-pass" id="togglePass" tabindex="-1"
+                                aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
                     </div>
                     <button type="submit" class="btn-login">
@@ -191,6 +206,17 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            var togglePass = document.getElementById('togglePass');
+            if (togglePass) {
+                togglePass.addEventListener('click', function () {
+                    var campo = document.getElementById('contrasena');
+                    var visible = campo.type === 'text';
+                    campo.type = visible ? 'password' : 'text';
+                    this.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+                    this.innerHTML = visible ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+            }
+
             const errorMessage = document.getElementById('alert-error');
             if (errorMessage) {
                 setTimeout(function () {

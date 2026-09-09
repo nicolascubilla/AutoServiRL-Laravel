@@ -20,12 +20,15 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('cambiar_contrasena_guardar') }}" id="formContrasena">
                         @csrf
-                        <div class="mb-3">
+<div class="mb-3">
                             <label class="form-label" for="actual">Contraseña actual</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="fas fa-lock"></i></span>
                                 <input type="password" class="form-control" id="actual" name="actual"
                                     required autocomplete="current-password" placeholder="Ingresá tu contraseña actual">
+                                <button type="button" class="btn btn-outline-secondary toggle-pass-btn" data-target="actual" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -35,6 +38,9 @@
                                 <span class="input-group-text bg-white"><i class="fas fa-unlock"></i></span>
                                 <input type="password" class="form-control" id="nueva" name="nueva"
                                     required autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres">
+                                <button type="button" class="btn btn-outline-secondary toggle-pass-btn" data-target="nueva" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -44,6 +50,9 @@
                                 <span class="input-group-text bg-white"><i class="fas fa-check"></i></span>
                                 <input type="password" class="form-control" id="repite" name="repite"
                                     required autocomplete="new-password" minlength="6" placeholder="Repetí la nueva contraseña">
+                                <button type="button" class="btn btn-outline-secondary toggle-pass-btn" data-target="repite" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -80,11 +89,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('repite').parentNode.appendChild(msg);
             }
         }
-        var actual = document.getElementById('actual');
+var actual = document.getElementById('actual');
         if (!actual.value) {
             actual.classList.add('is-invalid');
             e.preventDefault();
         }
+    });
+
+    document.querySelectorAll('.toggle-pass-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var campo = document.getElementById(this.getAttribute('data-target'));
+            var visible = campo.type === 'text';
+            campo.type = visible ? 'password' : 'text';
+            this.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+            this.innerHTML = visible ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
     });
 });
 </script>
