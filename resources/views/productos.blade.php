@@ -13,9 +13,14 @@
             <h2 class="mb-0">Productos</h2>
             <p class="text-muted mb-0">Gestione el catálogo de productos del negocio</p>
         </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProducto">
-            <i class="fas fa-plus me-1"></i> Nuevo Producto
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('productos.importar') }}" class="btn btn-outline-primary">
+                <i class="fas fa-file-import me-1"></i> Importar Excel
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProducto">
+                <i class="fas fa-plus me-1"></i> Nuevo Producto
+            </button>
+        </div>
     </div>
 
     <!-- TOOLBAR DE TABLA -->

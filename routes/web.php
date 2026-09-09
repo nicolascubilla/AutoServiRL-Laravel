@@ -47,6 +47,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/productos/guardar', [ProductoController::class, 'guardar'])->name('productos.guardar');
     Route::post('/productos/estado', [ProductoController::class, 'cambiarEstado'])->name('productos.estado');
 
+    // Importación de productos desde Excel
+    Route::get('/productos/importar', [ProductoController::class, 'mostrarImportador'])->name('productos.importar');
+    Route::post('/productos/importar/vista', [ProductoController::class, 'vistaPrevia'])->name('productos.importar.vista');
+    Route::post('/productos/importar/ejecutar', [ProductoController::class, 'ejecutar'])->name('productos.importar.ejecutar');
+
     // Stock
     Route::get('/stock', [StockController::class, 'index'])->name('stock');
     Route::post('/stock/entrada', [StockController::class, 'entrada'])->name('stock.entrada');
