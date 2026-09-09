@@ -31,27 +31,27 @@
                         <span class="input-group-text bg-white">
                             <i class="fas fa-search text-muted"></i>
                         </span>
-                        <input type="text" id="buscarVenta" class="form-control" placeholder="Buscar por nº venta o cajero...">
+                        <input type="text" id="buscarVenta" class="form-control" placeholder="Buscar por nº venta o cajero..." value="{{ request('q') }}">
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
                     <select id="filtroEstado" class="form-select form-select-sm">
-                        <option value="">Todas</option>
-                        <option value="1">Facturadas</option>
-                        <option value="0">Sin facturar</option>
+                        <option value="" {{ request('estado') === '' || request('estado') === null ? 'selected' : '' }}>Todas</option>
+                        <option value="1" {{ request('estado') === '1' ? 'selected' : '' }}>Facturadas</option>
+                        <option value="0" {{ request('estado') === '0' ? 'selected' : '' }}>Sin facturar</option>
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-3">
                     <select id="porPagina" class="form-select form-select-sm">
-                        <option value="15">15 por página</option>
-                        <option value="30" selected>30 por página</option>
-                        <option value="50">50 por página</option>
-                        <option value="100">100 por página</option>
+                        <option value="15" {{ request('porPagina') == 15 ? 'selected' : '' }}>15 por página</option>
+                        <option value="30" {{ request('porPagina') == 30 || request('porPagina') === null ? 'selected' : '' }}>30 por página</option>
+                        <option value="50" {{ request('porPagina') == 50 ? 'selected' : '' }}>50 por página</option>
+                        <option value="100" {{ request('porPagina') == 100 ? 'selected' : '' }}>100 por página</option>
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-2 text-md-end">
                     <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary" id="resumenTotal">
-                        <i class="fas fa-cash-register me-1"></i> <span id="cantTotal">{{ $historialVentas->count() }}</span>
+                        <i class="fas fa-cash-register me-1"></i> <span id="cantTotal">{{ number_format($historialVentas->total(), 0, ',', '.') }}</span>
                     </span>
                 </div>
             </div>
@@ -150,17 +150,20 @@
                 </table>
             </div>
 
-            @if ($historialVentas->count() === 0)
+            @if ($historialVentas->total() === 0)
                 <div class="text-center text-muted py-4">
                     <i class="fas fa-cash-register fs-1 d-block mb-2 opacity-50"></i>
-                    Aún no se han registrado ventas.
+                    No se encontraron ventas.
+                </div>
+            @else
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <small class="text-muted">
+                        Mostrando {{ $historialVentas->firstItem() }}–{{ $historialVentas->lastItem() }}
+                        de {{ number_format($historialVentas->total(), 0, ',', '.') }} venta(s)
+                    </small>
+                    {{ $historialVentas->links() }}
                 </div>
             @endif
-
-            <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-                <small class="text-muted" id="infoVenta"></small>
-                <ul class="pagination pagination-sm mb-0" id="paginadorVenta"></ul>
-            </nav>
         </div>
     </div>
 
@@ -219,94 +222,36 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const buscarVenta = document.getElementById('buscarVenta');
+    const filtroEstado = document.getElementById('filtroEstado');
+    const porPagina = document.getElementById('porPagina');
 
-    const $filas = Array.prototype.slice.call(document.querySelectorAll('#tablaVentas tbody tr'));
-    const paginador = document.getElementById('paginadorVenta');
-    const info = document.getElementById('infoVenta');
-
-    if ($filas.length === 0) return;
-
-    let porPagina = parseInt(document.getElementById('porPagina').value, 10);
-    let paginaActual = 1;
-
-    function filaCoincide(tr, q, estado) {
-        const okEstado = estado === '' || tr.dataset.facturada === estado;
-        if (!okEstado) return false;
-        return !q ||
-            (tr.dataset.numero || '').includes(q) ||
-            (tr.dataset.cajero || '').includes(q);
-    }
-
-    function getVisibles(q, estado) {
-        return $filas.filter(tr => filaCoincide(tr, q, estado));
-    }
-
-    document.getElementById('cantTotal').textContent = document.querySelectorAll('#tablaVentas tbody tr').length;
-
-    function renderPagina() {
-        const q = document.getElementById('buscarVenta').value.trim().toLowerCase();
-        const estado = document.getElementById('filtroEstado').value;
-        const visibles = getVisibles(q, estado);
-        const totalPaginas = Math.max(1, Math.ceil(visibles.length / porPagina));
-        if (paginaActual > totalPaginas) paginaActual = totalPaginas;
-
-        const desde = (paginaActual - 1) * porPagina;
-        const hasta = Math.min(desde + porPagina, visibles.length);
-
-        $filas.forEach(tr => tr.style.display = 'none');
-        for (let i = desde; i < hasta; i++) {
-            visibles[i].style.display = '';
+    function irHistorial() {
+        const url = new URL(window.location.href);
+        const q = buscarVenta.value.trim();
+        if (q) {
+            url.searchParams.set('q', q);
+        } else {
+            url.searchParams.delete('q');
         }
-
-        info.textContent = visibles.length > 0
-            ? 'Mostrando ' + (desde + 1) + '–' + hasta + ' de ' + visibles.length + ' venta(s)'
-            : 'Sin resultados';
-
-        paginador.innerHTML = '';
-        if (totalPaginas > 1) {
-            const btnPrev = document.createElement('li');
-            btnPrev.className = 'page-item' + (paginaActual === 1 ? ' disabled' : '');
-            btnPrev.innerHTML = '<button class="page-link" data-pagina="' + (paginaActual - 1) + '">&laquo;</button>';
-            paginador.appendChild(btnPrev);
-
-            for (let i = 1; i <= totalPaginas; i++) {
-                const li = document.createElement('li');
-                li.className = 'page-item' + (i === paginaActual ? ' active' : '');
-                li.innerHTML = '<button class="page-link" data-pagina="' + i + '">' + i + '</button>';
-                paginador.appendChild(li);
-            }
-
-            const btnNext = document.createElement('li');
-            btnNext.className = 'page-item' + (paginaActual === totalPaginas ? ' disabled' : '');
-            btnNext.innerHTML = '<button class="page-link" data-pagina="' + (paginaActual + 1) + '">&raquo;</button>';
-            paginador.appendChild(btnNext);
+        if (filtroEstado.value) {
+            url.searchParams.set('estado', filtroEstado.value);
+        } else {
+            url.searchParams.delete('estado');
         }
+        url.searchParams.set('porPagina', porPagina.value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
     }
 
-    paginador.addEventListener('click', function (e) {
-        const btn = e.target.closest('[data-pagina]');
-        if (!btn || btn.getAttribute('data-pagina') < 1) return;
-        paginaActual = parseInt(btn.getAttribute('data-pagina'), 10);
-        renderPagina();
+    let timer = null;
+    buscarVenta.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(irHistorial, 400);
     });
 
-    document.getElementById('porPagina').addEventListener('change', function () {
-        porPagina = parseInt(this.value, 10);
-        paginaActual = 1;
-        renderPagina();
-    });
-
-    document.getElementById('buscarVenta').addEventListener('keyup', function () {
-        paginaActual = 1;
-        renderPagina();
-    });
-
-    document.getElementById('filtroEstado').addEventListener('change', function () {
-        paginaActual = 1;
-        renderPagina();
-    });
-
-    renderPagina();
+    filtroEstado.addEventListener('change', irHistorial);
+    porPagina.addEventListener('change', irHistorial);
 });
 </script>
 <script>

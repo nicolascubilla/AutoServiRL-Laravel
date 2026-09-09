@@ -195,6 +195,11 @@ class FacturacionController extends Controller
 
     public function listarFacturas(Request $request)
     {
+        $q = trim((string) $request->input('q', ''));
+        $porPagina = in_array((int) $request->input('porPagina', 30), [15, 30, 50, 100], true)
+            ? (int) $request->input('porPagina', 30)
+            : 30;
+
         $facturas = DB::table('facturas as f')
             ->select(
                 'f.factura_id',
@@ -212,9 +217,19 @@ class FacturacionController extends Controller
                 'f.fecha_emision',
                 'f.estado'
             )
+            ->when($q !== '', function ($query) use ($q) {
+                return $query->where(function ($where) use ($q) {
+                    $where->where('f.cliente_nombre', 'ilike', '%' . $q . '%')
+                        ->orWhere('f.cliente_documento', 'ilike', '%' . $q . '%');
+                    if (is_numeric($q)) {
+                        $where->orWhere('f.numero_factura', '=', (int) $q);
+                    }
+                });
+            })
             ->orderByDesc('f.fecha_emision')
             ->orderByDesc('f.factura_id')
-            ->get();
+            ->paginate($porPagina)
+            ->withQueryString();
 
         return view('factura_historial', ['facturas' => $facturas]);
     }

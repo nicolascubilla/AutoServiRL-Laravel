@@ -87,8 +87,12 @@ class VentaController extends Controller
         }
     }
 
-    public function listar()
+    public function listar(Request $request)
     {
+        $q = trim((string) $request->input('q', ''));
+        $estado = trim((string) $request->input('estado', ''));
+        $porPagina = $this->porPagina((int) $request->input('porPagina', 30));
+
         $historialVentas = DB::table('ventas as v')
             ->select(
                 'v.venta_id',
@@ -110,11 +114,31 @@ class VentaController extends Controller
                 $join->on('f.venta_id', '=', 'v.venta_id')
                     ->where('f.estado', '=', 'A');
             })
+            ->when($q !== '', function ($query) use ($q) {
+                return $query->where(function ($where) use ($q) {
+                    $where->where('u.nombre_completo', 'ilike', '%' . $q . '%');
+                    if (is_numeric($q)) {
+                        $where->orWhere('v.venta_id', '=', (int) $q);
+                    }
+                });
+            })
+            ->when($estado === '1', function ($query) {
+                return $query->whereNotNull('f.factura_id');
+            })
+            ->when($estado === '0', function ($query) {
+                return $query->whereNull('f.factura_id');
+            })
             ->orderByDesc('v.fecha_venta')
             ->orderByDesc('v.venta_id')
-            ->get();
+            ->paginate($porPagina)
+            ->withQueryString();
 
         return view('ventas_historial', ['historialVentas' => $historialVentas]);
+    }
+
+    private function porPagina(int $valor): int
+    {
+        return in_array($valor, [15, 30, 50, 100], true) ? $valor : 30;
     }
 
     public function anular(Request $request)

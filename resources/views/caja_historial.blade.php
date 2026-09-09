@@ -81,6 +81,14 @@
                     </table>
                 </div>
 
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <small class="text-muted">
+                        Mostrando {{ $historialCajas->firstItem() }}–{{ $historialCajas->lastItem() }}
+                        de {{ number_format($historialCajas->total(), 0, ',', '.') }} caja(s) cerrada(s)
+                    </small>
+                    {{ $historialCajas->links() }}
+                </div>
+
             @endif
 
         </div>

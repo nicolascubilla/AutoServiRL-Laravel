@@ -94,6 +94,8 @@ class InformeController extends Controller
 
     private function resumenVentas(string $desde, string $hasta): object
     {
+        [$inicio, $fin] = $this->rangoFechas($desde, $hasta);
+
         return DB::table('ventas as v')
             ->selectRaw('
                 COUNT(v.venta_id) AS cantidad,
@@ -102,15 +104,19 @@ class InformeController extends Controller
                 COALESCE(SUM(CASE WHEN vp.forma_pago = \'T\' THEN vp.monto ELSE 0 END),0) AS transferencia
             ')
             ->leftJoin('venta_pagos as vp', 'vp.venta_id', '=', 'v.venta_id')
-            ->whereBetween(DB::raw('v.fecha_venta::date'), [$desde, $hasta])
+            ->where('v.fecha_venta', '>=', $inicio)
+            ->where('v.fecha_venta', '<', $fin)
             ->first();
     }
 
     private function ventasPorDia(string $desde, string $hasta)
     {
+        [$inicio, $fin] = $this->rangoFechas($desde, $hasta);
+
         return DB::table('ventas as v')
             ->selectRaw('v.fecha_venta::date AS fecha, COUNT(v.venta_id) AS cantidad, COALESCE(SUM(v.total),0) AS total')
-            ->whereBetween(DB::raw('v.fecha_venta::date'), [$desde, $hasta])
+            ->where('v.fecha_venta', '>=', $inicio)
+            ->where('v.fecha_venta', '<', $fin)
             ->groupBy(DB::raw('v.fecha_venta::date'))
             ->orderBy(DB::raw('v.fecha_venta::date'))
             ->get();
@@ -118,6 +124,8 @@ class InformeController extends Controller
 
     private function resumenFacturacion(string $desde, string $hasta): object
     {
+        [$inicio, $fin] = $this->rangoFechas($desde, $hasta);
+
         return DB::table('facturas as f')
             ->selectRaw('
                 COUNT(f.factura_id) AS cantidad,
@@ -126,12 +134,15 @@ class InformeController extends Controller
                 COALESCE(SUM(f.total_exenta),0) AS total_exenta
             ')
             ->where('f.estado', 'A')
-            ->whereBetween(DB::raw('f.fecha_emision::date'), [$desde, $hasta])
+            ->where('f.fecha_emision', '>=', $inicio)
+            ->where('f.fecha_emision', '<', $fin)
             ->first();
     }
 
     private function topProductos(string $desde, string $hasta, int $limite = 10)
     {
+        [$inicio, $fin] = $this->rangoFechas($desde, $hasta);
+
         return DB::table('venta_detalle as vd')
             ->select(
                 'p.pro_cod',
@@ -141,11 +152,20 @@ class InformeController extends Controller
             )
             ->join('ventas as v', 'v.venta_id', '=', 'vd.venta_id')
             ->join('productos as p', 'p.pro_cod', '=', 'vd.pro_cod')
-            ->whereBetween(DB::raw('v.fecha_venta::date'), [$desde, $hasta])
+            ->where('v.fecha_venta', '>=', $inicio)
+            ->where('v.fecha_venta', '<', $fin)
             ->groupBy('p.pro_cod', 'p.descripcion')
             ->orderByDesc(DB::raw('SUM(vd.cantidad)'))
             ->limit($limite)
             ->get();
+    }
+
+    private function rangoFechas(string $desde, string $hasta): array
+    {
+        $inicio = $desde . ' 00:00:00';
+        $fin = date('Y-m-d', strtotime($hasta . ' +1 day')) . ' 00:00:00';
+
+        return [$inicio, $fin];
     }
 
     private function fechaDesde(Request $request): string

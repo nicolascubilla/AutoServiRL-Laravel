@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-$totalFacturas = $facturas->count();
+$totalFacturas = $facturas->total();
 @endphp
 <div class="container-fluid">
 
@@ -35,20 +35,20 @@ $totalFacturas = $facturas->count();
                         <span class="input-group-text bg-white">
                             <i class="fas fa-search text-muted"></i>
                         </span>
-                        <input type="text" id="buscarFactura" class="form-control" placeholder="Buscar por número o cliente...">
+<input type="text" id="buscarFactura" class="form-control" placeholder="Buscar por número, cliente o documento..." value="{{ request('q') }}">
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-4">
                     <select id="porPagina" class="form-select form-select-sm">
-                        <option value="15">15 por página</option>
-                        <option value="30" selected>30 por página</option>
-                        <option value="50">50 por página</option>
-                        <option value="100">100 por página</option>
+                        <option value="15" {{ request('porPagina') == 15 ? 'selected' : '' }}>15 por página</option>
+                        <option value="30" {{ request('porPagina') == 30 || request('porPagina') === null ? 'selected' : '' }}>30 por página</option>
+                        <option value="50" {{ request('porPagina') == 50 ? 'selected' : '' }}>50 por página</option>
+                        <option value="100" {{ request('porPagina') == 100 ? 'selected' : '' }}>100 por página</option>
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-4 text-md-end">
                     <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary" id="resumenTotal">
-                        <i class="fas fa-file-invoice me-1"></i> <span id="cantTotal">{{ $totalFacturas }}</span> factura(s)
+                        <i class="fas fa-file-invoice me-1"></i> <span id="cantTotal">{{ number_format($totalFacturas, 0, ',', '.') }}</span> factura(s)
                     </span>
                 </div>
             </div>
@@ -116,17 +116,20 @@ $totalFacturas = $facturas->count();
                 </table>
             </div>
 
-            @if ($totalFacturas === 0)
+@if ($totalFacturas === 0)
                 <div class="text-center text-muted py-4">
                     <i class="fas fa-file-invoice fs-1 d-block mb-2 opacity-50"></i>
-                    Aún no se han emitido facturas.
+                    No se encontraron facturas.
+                </div>
+            @else
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <small class="text-muted">
+                        Mostrando {{ $facturas->firstItem() }}–{{ $facturas->lastItem() }}
+                        de {{ number_format($totalFacturas, 0, ',', '.') }} factura(s)
+                    </small>
+                    {{ $facturas->links() }}
                 </div>
             @endif
-
-            <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-                <small class="text-muted" id="infoFactura"></small>
-                <ul class="pagination pagination-sm mb-0" id="paginadorFactura"></ul>
-            </nav>
         </div>
     </div>
 
@@ -136,88 +139,29 @@ $totalFacturas = $facturas->count();
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const buscarFactura = document.getElementById('buscarFactura');
+    const porPagina = document.getElementById('porPagina');
 
-    const $filas = Array.prototype.slice.call(document.querySelectorAll('#tablaFacturas tbody tr'));
-    const paginador = document.getElementById('paginadorFactura');
-    const info = document.getElementById('infoFactura');
-
-    if ($filas.length === 0) return;
-
-    let porPagina = parseInt(document.getElementById('porPagina').value, 10);
-    let paginaActual = 1;
-
-    function filaCoincide(tr, q) {
-        return !q ||
-            (tr.dataset.numero || '').includes(q) ||
-            (tr.dataset.numeroSec || '').includes(q) ||
-            (tr.dataset.documento || '').includes(q) ||
-            (tr.dataset.cliente || '').includes(q);
-    }
-
-    function getVisibles(q) {
-        return $filas.filter(tr => filaCoincide(tr, q));
-    }
-
-    document.getElementById('cantTotal').textContent = document.querySelectorAll('#tablaFacturas tbody tr').length;
-
-    function renderPagina() {
-        const q = document.getElementById('buscarFactura').value.trim().toLowerCase();
-        const visibles = getVisibles(q);
-        const totalPaginas = Math.max(1, Math.ceil(visibles.length / porPagina));
-        if (paginaActual > totalPaginas) paginaActual = totalPaginas;
-
-        const desde = (paginaActual - 1) * porPagina;
-        const hasta = Math.min(desde + porPagina, visibles.length);
-
-        $filas.forEach(tr => tr.style.display = 'none');
-        for (let i = desde; i < hasta; i++) {
-            visibles[i].style.display = '';
+    function irHistorial() {
+        const url = new URL(window.location.href);
+        const q = buscarFactura.value.trim();
+        if (q) {
+            url.searchParams.set('q', q);
+        } else {
+            url.searchParams.delete('q');
         }
-
-        info.textContent = visibles.length > 0
-            ? 'Mostrando ' + (desde + 1) + '\u2013' + hasta + ' de ' + visibles.length + ' factura(s)'
-            : 'Sin resultados';
-
-        paginador.innerHTML = '';
-        if (totalPaginas > 1) {
-            const btnPrev = document.createElement('li');
-            btnPrev.className = 'page-item' + (paginaActual === 1 ? ' disabled' : '');
-            btnPrev.innerHTML = '<button class="page-link" data-pagina="' + (paginaActual - 1) + '">&laquo;</button>';
-            paginador.appendChild(btnPrev);
-
-            for (let i = 1; i <= totalPaginas; i++) {
-                const li = document.createElement('li');
-                li.className = 'page-item' + (i === paginaActual ? ' active' : '');
-                li.innerHTML = '<button class="page-link" data-pagina="' + i + '">' + i + '</button>';
-                paginador.appendChild(li);
-            }
-
-            const btnNext = document.createElement('li');
-            btnNext.className = 'page-item' + (paginaActual === totalPaginas ? ' disabled' : '');
-            btnNext.innerHTML = '<button class="page-link" data-pagina="' + (paginaActual + 1) + '">&raquo;</button>';
-            paginador.appendChild(btnNext);
-        }
+        url.searchParams.set('porPagina', porPagina.value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
     }
 
-    paginador.addEventListener('click', function (e) {
-        const btn = e.target.closest('[data-pagina]');
-        if (!btn || btn.getAttribute('data-pagina') < 1) return;
-        paginaActual = parseInt(btn.getAttribute('data-pagina'), 10);
-        renderPagina();
+    let timer = null;
+    buscarFactura.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(irHistorial, 400);
     });
 
-    document.getElementById('porPagina').addEventListener('change', function () {
-        porPagina = parseInt(this.value, 10);
-        paginaActual = 1;
-        renderPagina();
-    });
-
-    document.getElementById('buscarFactura').addEventListener('keyup', function () {
-        paginaActual = 1;
-        renderPagina();
-    });
-
-    renderPagina();
+    porPagina.addEventListener('change', irHistorial);
 });
 </script>
 @endsection

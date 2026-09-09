@@ -22,7 +22,8 @@ class DashboardController extends Controller
     private function ventasDelDia(): int
     {
         return (int) DB::table('ventas')
-            ->whereDate('fecha_venta', DB::raw('CURRENT_DATE'))
+            ->where('fecha_venta', '>=', DB::raw('CURRENT_DATE'))
+            ->where('fecha_venta', '<', DB::raw("CURRENT_DATE + INTERVAL '1 day'"))
             ->where('estado', 'P')
             ->sum('total');
     }
@@ -30,7 +31,8 @@ class DashboardController extends Controller
     private function cantidadVentas(): int
     {
         return (int) DB::table('ventas')
-            ->whereDate('fecha_venta', DB::raw('CURRENT_DATE'))
+            ->where('fecha_venta', '>=', DB::raw('CURRENT_DATE'))
+            ->where('fecha_venta', '<', DB::raw("CURRENT_DATE + INTERVAL '1 day'"))
             ->where('estado', 'P')
             ->count();
     }
@@ -55,7 +57,8 @@ class DashboardController extends Controller
     {
         return DB::table('ventas')
             ->select('total', 'fecha_venta')
-            ->whereDate('fecha_venta', DB::raw('CURRENT_DATE'))
+            ->where('fecha_venta', '>=', DB::raw('CURRENT_DATE'))
+            ->where('fecha_venta', '<', DB::raw("CURRENT_DATE + INTERVAL '1 day'"))
             ->where('estado', 'P')
             ->orderByDesc('total')
             ->first();

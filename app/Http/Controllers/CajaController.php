@@ -91,7 +91,7 @@ class CajaController extends Controller
             ->where('c.estado', 'C')
             ->orderByDesc('c.fecha_cierre')
             ->orderByDesc('c.caja_id')
-            ->get();
+            ->paginate(50);
 
         return view('caja_historial', ['historialCajas' => $historialCajas]);
     }
