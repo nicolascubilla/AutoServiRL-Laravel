@@ -17,6 +17,7 @@ class StockController extends Controller
                 'p.descripcion',
                 'p.precio',
                 'p.activo',
+                'p.maneja_stock',
                 DB::raw('COALESCE(s.cantidad, 0) AS cantidad'),
                 DB::raw('COALESCE(s.stock_minimo, 0) AS stock_minimo'),
                 's.fecha_actualizacion'
@@ -105,6 +106,14 @@ class StockController extends Controller
             throw new \Exception('Tipo de movimiento inválido.');
         }
 
+        $manejaStock = (string) DB::table('productos')
+            ->where('pro_cod', $pro_cod)
+            ->value('maneja_stock');
+
+        if ($manejaStock === 'N') {
+            throw new \Exception('El producto no maneja stock.');
+        }
+
         DB::transaction(function () use ($pro_cod, $tipo, $cantidad, $observacion, $usuario_id) {
             $stock_resultante = null;
 
@@ -150,6 +159,14 @@ class StockController extends Controller
     {
         if ($pro_cod <= 0 || $stock_minimo < 0) {
             throw new \Exception('Datos de stock mínimo inválidos.');
+        }
+
+        $manejaStock = (string) DB::table('productos')
+            ->where('pro_cod', $pro_cod)
+            ->value('maneja_stock');
+
+        if ($manejaStock === 'N') {
+            throw new \Exception('El producto no maneja stock.');
         }
 
         $exists = DB::table('stock')->where('pro_cod', $pro_cod)->exists();

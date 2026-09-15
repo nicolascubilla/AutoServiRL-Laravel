@@ -16,6 +16,18 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // ===================== PASSWORD RESET TOKENS =====================
+        if (!Schema::hasTable('password_reset_tokens')) {
+            Schema::create('password_reset_tokens', function (Blueprint $table) {
+                $table->string('email')->primary();
+                $table->string('token');
+                $table->timestamp('created_at')->nullable();
+                $table->timestamp('expires_at')->nullable();
+
+                $table->index('expires_at');
+            });
+        }
+
         // ===================== USUARIOS =====================
         if (!Schema::hasTable('usuarios')) {
             Schema::create('usuarios', function (Blueprint $table) {
@@ -60,6 +72,7 @@ return new class extends Migration
                 $table->timestamp('fecha_creacion')->default(\DB::raw('CURRENT_TIMESTAMP'));
                 $table->string('codigo', 20)->nullable();
                 $table->string('tasa_iva', 2)->default('10');
+                $table->string('maneja_stock', 1)->default('S');
             });
         }
 
@@ -123,6 +136,7 @@ return new class extends Migration
                 $table->integer('usuario_id');
                 $table->timestamp('fecha_venta')->default(\DB::raw('CURRENT_TIMESTAMP'));
                 $table->integer('total')->default(0);
+                $table->integer('monto_recibido')->nullable();
                 $table->string('estado', 1)->default('P');
                 $table->string('observacion', 500)->nullable();
 

@@ -87,14 +87,26 @@
                                 </td>
                                 <td class="text-end">Gs. {{ number_format($p->precio, 0, ',', '.') }}</td>
                                 <td class="text-end">
-                                    <strong class="{{ $bajo ? 'text-danger' : '' }}">
-                                        {{ rtrim(rtrim(number_format($cantidad, 3, ',', '.'), '0'), ',') }}
-                                    </strong>
+                                    @if (($p->maneja_stock ?? 'S') === 'N')
+                                        <span class="text-muted">&mdash;</span>
+                                    @else
+                                        <strong class="{{ $bajo ? 'text-danger' : '' }}">
+                                            {{ rtrim(rtrim(number_format($cantidad, 3, ',', '.'), '0'), ',') }}
+                                        </strong>
+                                    @endif
                                 </td>
-                                <td class="text-end">{{ rtrim(rtrim(number_format($stockMin, 3, ',', '.'), '0'), ',') }}</td>
+                                <td class="text-end">
+                                    @if (($p->maneja_stock ?? 'S') === 'N')
+                                        <span class="text-muted">&mdash;</span>
+                                    @else
+                                        {{ rtrim(rtrim(number_format($stockMin, 3, ',', '.'), '0'), ',') }}
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     @if ($p->activo !== 'S')
                                         <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary">Inactivo</span>
+                                    @elseif (($p->maneja_stock ?? 'S') === 'N')
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary">Sin stock</span>
                                     @elseif ($bajo)
                                         <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger">Stock bajo</span>
                                     @else
@@ -102,6 +114,9 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
+                                    @if (($p->maneja_stock ?? 'S') === 'N')
+                                        <small class="text-muted">Sin control de stock</small>
+                                    @else
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn btn-outline-success btnEntrada" title="Registrar entrada"
                                             data-bs-toggle="modal" data-bs-target="#modalEntrada"
@@ -131,6 +146,7 @@
                                             <i class="fas fa-history"></i>
                                         </button>
                                     </div>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

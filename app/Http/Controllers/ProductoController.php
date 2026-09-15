@@ -477,6 +477,7 @@ class ProductoController extends Controller
 
         $pro_cod = (int) $request->input('pro_cod', 0);
         $datos = $request->only(['codigo', 'codigo_barra', 'descripcion', 'precio', 'tasa_iva', 'cantidad', 'stock_minimo']);
+        $datos['maneja_stock'] = $request->input('maneja_stock') === 'S' ? 'S' : 'N';
 
         try {
             if ($pro_cod <= 0) {
@@ -517,9 +518,12 @@ class ProductoController extends Controller
                 'precio' => (int) $datos['precio'],
                 'tasa_iva' => $datos['tasa_iva'] ?? '10',
                 'activo' => 'S',
+                'maneja_stock' => $datos['maneja_stock'] ?? 'S',
             ], 'pro_cod');
 
-            $this->upsertStock($pro_cod, (float) ($datos['cantidad'] ?? 0), (float) ($datos['stock_minimo'] ?? 0));
+            if (($datos['maneja_stock'] ?? 'S') === 'S') {
+                $this->upsertStock($pro_cod, (float) ($datos['cantidad'] ?? 0), (float) ($datos['stock_minimo'] ?? 0));
+            }
 
             return (int) $pro_cod;
         });
@@ -536,9 +540,12 @@ class ProductoController extends Controller
                     'descripcion' => $datos['descripcion'],
                     'precio' => (int) $datos['precio'],
                     'tasa_iva' => $datos['tasa_iva'] ?? '10',
+                    'maneja_stock' => $datos['maneja_stock'] ?? 'S',
                 ]);
 
-            $this->upsertStock((int) $datos['pro_cod'], null, (float) ($datos['stock_minimo'] ?? 0));
+            if (($datos['maneja_stock'] ?? 'S') === 'S') {
+                $this->upsertStock((int) $datos['pro_cod'], null, (float) ($datos['stock_minimo'] ?? 0));
+            }
         });
     }
 

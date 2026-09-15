@@ -13,7 +13,7 @@
             <h2 class="mb-0">Productos</h2>
             <p class="text-muted mb-0">Gestione el catálogo de productos del negocio</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="ms-auto d-flex flex-wrap gap-2">
             <a href="{{ route('productos.importar') }}" class="btn btn-outline-primary">
                 <i class="fas fa-file-import me-1"></i> Importar Excel
             </a>
@@ -86,11 +86,23 @@ MODAL PRODUCTO
                     </select>
                 </div>
 
-                <div class="row g-3">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-center">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="maneja_stock" name="maneja_stock" value="S" checked>
+                            <label class="form-check-label" for="maneja_stock">¿El producto maneja stock?</label>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block text-center">
+                        Desmarque para productos a granel o por peso, que se venden sin control de stock.
+                    </small>
+                </div>
+
+                <div class="row g-3" id="camposStock">
                     <div class="col-md-6">
                         <div class="mb-1">
-                            <label class="form-label">Cantidad inicial <span class="text-danger">*</span></label>
-                            <input type="text" id="cantidad" name="cantidad" class="form-control" autocomplete="off" required>
+                            <label class="form-label">Cantidad inicial</label>
+                            <input type="text" id="cantidad" name="cantidad" class="form-control" autocomplete="off">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -100,9 +112,11 @@ MODAL PRODUCTO
                         </div>
                     </div>
                 </div>
-                <small class="text-muted d-block mt-1">
-                    La cantidad inicial solo aplica al crear el producto. Para modificarla luego, use el módulo de Stock.
-                </small>
+                <div id="hintCantidad">
+                    <small class="text-muted d-block mt-1">
+                        La cantidad inicial solo aplica al crear el producto. Para modificarla luego, use el módulo de Stock.
+                    </small>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -282,6 +296,18 @@ MODAL PRODUCTO
         minimumValue: '0'
     });
 
+    /* Mostrar/ocultar campos de stock según "¿Maneja stock?" */
+    const chkManejaStock = document.getElementById("maneja_stock");
+    const camposStock = document.getElementById("camposStock");
+    const hintCantidad = document.getElementById("hintCantidad");
+
+    function toggleCamposStock() {
+        const activo = chkManejaStock.checked;
+        camposStock.style.display = activo ? "" : "none";
+        hintCantidad.style.display = activo ? "" : "none";
+    }
+    chkManejaStock.addEventListener("change", toggleCamposStock);
+
     /* Antes de enviar, quitar formato numérico */
     const form = document.getElementById("frmProducto");
     form.addEventListener("submit", function() {
@@ -329,6 +355,8 @@ MODAL PRODUCTO
             document.getElementById("pro_cod").value = "";
             document.querySelector(".modal-title").innerText = "Nuevo Producto";
             document.getElementById("cantidad").readOnly = false;
+            document.getElementById("maneja_stock").checked = true;
+            toggleCamposStock();
 
             AutoNumeric.getAutoNumericElement("#precio").clear();
             const ca = AutoNumeric.getAutoNumericElement("#cantidad");
@@ -349,6 +377,8 @@ MODAL PRODUCTO
         AutoNumeric.getAutoNumericElement("#stock_minimo").set(producto.stock_minimo ?? 0);
         document.getElementById("tasa_iva").value = producto.tasa_iva ?? "10";
         document.querySelector(".modal-title").innerText = "Editar Producto";
+        document.getElementById("maneja_stock").checked = (producto.maneja_stock ?? "S") === "S";
+        toggleCamposStock();
         document.getElementById("cantidad").readOnly = true;
         bootstrap.Modal.getOrCreateInstance(modalProducto).show();
     }

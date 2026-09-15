@@ -33,7 +33,7 @@ class VentaController extends Controller
         }
 
         $producto = DB::table('productos')
-            ->select('pro_cod', 'codigo', 'codigo_barra', 'descripcion', 'precio')
+            ->select('pro_cod', 'codigo', 'codigo_barra', 'descripcion', 'precio', 'maneja_stock')
             ->where('codigo_barra', $codigo_barra)
             ->where('activo', 'S')
             ->first();
@@ -197,10 +197,9 @@ class VentaController extends Controller
                     throw new \Exception('Producto o cantidad inválida.');
                 }
 
-                // Buscar producto y bloquear stock
+                // Buscar producto (el stock puede no existir para productos sin control de stock)
                 $producto = DB::table('productos as p')
-                    ->select('p.pro_cod', 'p.descripcion', 'p.precio', 's.cantidad AS stock')
-                    ->join('stock as s', 's.pro_cod', '=', 'p.pro_cod')
+                    ->select('p.pro_cod', 'p.descripcion', 'p.precio', 'p.maneja_stock')
                     ->where('p.pro_cod', $pro_cod)
                     ->where('p.activo', 'S')
                     ->lockForUpdate()
@@ -210,9 +209,17 @@ class VentaController extends Controller
                     throw new \Exception('Uno de los productos ya no está disponible.');
                 }
 
-                $stock = $producto->stock !== null ? (float) $producto->stock : 0;
-                if ($stock < $cantidad) {
-                    throw new \Exception('Stock insuficiente para: ' . $producto->descripcion . '. Disponible: ' . $stock);
+                $manejaStock = ($producto->maneja_stock ?? 'S') === 'S';
+
+                if ($manejaStock) {
+                    $stock = (float) (DB::table('stock')
+                        ->where('pro_cod', $pro_cod)
+                        ->lockForUpdate()
+                        ->value('cantidad') ?? 0);
+
+                    if ($stock < $cantidad) {
+                        throw new \Exception('Stock insuficiente para: ' . $producto->descripcion . '. Disponible: ' . $stock);
+                    }
                 }
 
                 $precio = (int) $producto->precio;
@@ -228,30 +235,32 @@ class VentaController extends Controller
                     'subtotal' => $subtotal,
                 ]);
 
-                // Actualizar stock
-                $stockResultante = DB::table('stock')
-                    ->where('pro_cod', $pro_cod)
-                    ->where('cantidad', '>=', $cantidad)
-                    ->update([
-                        'cantidad' => DB::raw('cantidad - ' . $cantidad),
-                        'fecha_actualizacion' => DB::raw('CURRENT_TIMESTAMP'),
+                if ($manejaStock) {
+                    // Actualizar stock
+                    $stockResultante = DB::table('stock')
+                        ->where('pro_cod', $pro_cod)
+                        ->where('cantidad', '>=', $cantidad)
+                        ->update([
+                            'cantidad' => DB::raw('cantidad - ' . $cantidad),
+                            'fecha_actualizacion' => DB::raw('CURRENT_TIMESTAMP'),
+                        ]);
+
+                    if (!$stockResultante) {
+                        throw new \Exception('No fue posible actualizar el stock de: ' . $producto->descripcion);
+                    }
+
+                    $nuevoStock = DB::table('stock')->where('pro_cod', $pro_cod)->value('cantidad');
+
+                    // Historial de movimiento
+                    DB::table('stock_movimientos')->insert([
+                        'pro_cod' => $pro_cod,
+                        'tipo' => 'salida',
+                        'cantidad' => $cantidad,
+                        'stock_resultante' => (float) $nuevoStock,
+                        'observacion' => 'Venta',
+                        'usuario_id' => $usuario_id,
                     ]);
-
-                if (!$stockResultante) {
-                    throw new \Exception('No fue posible actualizar el stock de: ' . $producto->descripcion);
                 }
-
-                $nuevoStock = DB::table('stock')->where('pro_cod', $pro_cod)->value('cantidad');
-
-                // Historial de movimiento
-                DB::table('stock_movimientos')->insert([
-                    'pro_cod' => $pro_cod,
-                    'tipo' => 'salida',
-                    'cantidad' => $cantidad,
-                    'stock_resultante' => (float) $nuevoStock,
-                    'observacion' => 'Venta',
-                    'usuario_id' => $usuario_id,
-                ]);
             }
 
             if ($total <= 0) {
@@ -327,13 +336,18 @@ class VentaController extends Controller
                 ->update(['estado' => 'N']);
 
             // 3. Obtener detalle
-            $detalle = DB::table('venta_detalle')
-                ->select('pro_cod', 'cantidad')
-                ->where('venta_id', $venta_id)
+            $detalle = DB::table('venta_detalle as vd')
+                ->select('vd.pro_cod', 'vd.cantidad', 'p.maneja_stock')
+                ->leftJoin('productos as p', 'p.pro_cod', '=', 'vd.pro_cod')
+                ->where('vd.venta_id', $venta_id)
                 ->get();
 
-            // 4. Reintegrar stock + historial
+            // 4. Reintegrar stock + historial (solo productos que manejan stock)
             foreach ($detalle as $item) {
+                if (($item->maneja_stock ?? 'S') !== 'S') {
+                    continue;
+                }
+
                 DB::table('stock')
                     ->where('pro_cod', $item->pro_cod)
                     ->update([

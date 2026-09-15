@@ -509,10 +509,7 @@ foreach ($detalle as $item) {
 
         </div>
 
-        <div class="pie">
-            <div class="gracias">¡Gracias por su compra!</div>
-            Documento emitido por el sistema AutoServiRL
-        </div>
+      
 
         <div class="botones">
             <button type="button" class="btn-imprimir" onclick="window.print()">🖨 Imprimir</button>

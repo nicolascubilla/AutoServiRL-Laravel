@@ -66,7 +66,7 @@ LAYOUT
     display:flex;
     flex-direction:column;
     min-height:calc(100vh - 60px);
-    width:100%;
+    width:calc(100% - 250px);
     transition:margin-left .3s ease;
 }
 
@@ -109,6 +109,7 @@ body.sidebar-collapsed .left-panel {
 
 body.sidebar-collapsed .content-wrapper {
     margin-left: 70px;
+    width: calc(100% - 70px);
 }
 
 .left-panel.collapsed .nav-text {
