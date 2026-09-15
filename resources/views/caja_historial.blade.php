@@ -15,6 +15,26 @@
         </a>
     </div>
 
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body py-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6 col-lg-4">
+                    <select id="porPagina" class="form-select form-select-sm">
+                        <option value="15" {{ request('porPagina') == 15 ? 'selected' : '' }}>15 por página</option>
+                        <option value="30" {{ request('porPagina') == 30 ? 'selected' : '' }}>30 por página</option>
+                        <option value="50" {{ request('porPagina') == 50 || request('porPagina') === null ? 'selected' : '' }}>50 por página</option>
+                        <option value="100" {{ request('porPagina') == 100 ? 'selected' : '' }}>100 por página</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-8 text-md-end">
+                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary">
+                        <i class="fas fa-cash-register me-1"></i> {{ number_format($historialCajas->total(), 0, ',', '.') }} caja(s) cerrada(s)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
         <div class="card-body">
 
@@ -95,4 +115,20 @@
     </div>
 
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const porPagina = document.getElementById('porPagina');
+    if (!porPagina) return;
+
+    porPagina.addEventListener('change', function () {
+        const url = new URL(window.location.href);
+        url.searchParams.set('porPagina', this.value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    });
+});
+</script>
 @endsection

@@ -10,7 +10,7 @@
     <!-- ENCABEZADO -->
     <div class="page-header">
         <div>
-            <h2 class="mb-0">Productos</h2>
+            <h2 class="mb-0"><i class="fas fa-boxes me-2 text-primary"></i>Productos</h2>
             <p class="text-muted mb-0">Gestione el catálogo de productos del negocio</p>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
@@ -23,19 +23,33 @@
         </div>
     </div>
 
-    <!-- TOOLBAR DE TABLA -->
+    <!-- TOOLBAR -->
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body py-3">
             <div class="row g-2 align-items-center">
-                <div class="col-md-5 col-lg-4">
+                <div class="col-md-6 col-lg-4">
                     <div class="input-group">
                         <span class="input-group-text bg-white">
                             <i class="fas fa-search text-muted"></i>
                         </span>
-                        <input type="text" id="buscarProducto" class="form-control" placeholder="Código, barras o descripción...">
+                        <input type="text" id="buscarProducto" class="form-control"
+                            placeholder="Código, barras o descripción..." value="{{ request('q') }}">
                     </div>
                 </div>
-                <div class="col-md-7 col-lg-8 text-md-end text-muted small" id="totalRegistros"></div>
+                <div class="col-md-6 col-lg-3">
+                    <select id="porPagina" class="form-select form-select-sm">
+                        <option value="15" {{ request('porPagina') == 15 ? 'selected' : '' }}>15 por página</option>
+                        <option value="30" {{ request('porPagina') == 30 ? 'selected' : '' }}>30 por página</option>
+                        <option value="50" {{ request('porPagina') == 50 || request('porPagina') === null ? 'selected' : '' }}>50 por página</option>
+                        <option value="100" {{ request('porPagina') == 100 ? 'selected' : '' }}>100 por página</option>
+                        <option value="200" {{ request('porPagina') == 200 ? 'selected' : '' }}>200 por página</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-3 text-md-end">
+                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary">
+                        <i class="fas fa-boxes me-1"></i> <span id="cantProductos">{{ number_format($productos->total(), 0, ',', '.') }}</span> producto(s)
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -43,9 +57,92 @@
     <!-- TABLA -->
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <div id="tablaProductos"></div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaProductos">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Cód. Barra</th>
+                            <th>Descripción</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-center">IVA</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($productos as $p)
+                            @php
+                            $activo = $p->activo === 'S';
+                            $manejaStock = ($p->maneja_stock ?? 'S') === 'S';
+                            @endphp
+                            <tr data-pro-cod="{{ (int) $p->pro_cod }}"
+                                data-codigo="{{ $p->codigo ?? '' }}"
+                                data-codigo-barra="{{ $p->codigo_barra }}"
+                                data-descripcion="{{ $p->descripcion }}"
+                                data-precio="{{ (int) $p->precio }}"
+                                data-tasa-iva="{{ $p->tasa_iva }}"
+                                data-maneja-stock="{{ $p->maneja_stock ?? 'S' }}"
+                                data-activo="{{ $p->activo }}"
+                                data-cantidad="{{ $p->cantidad }}"
+                                data-stock-minimo="{{ $p->stock_minimo }}">
+                                <td><strong>{{ $p->codigo ?? '-' }}</strong></td>
+                                <td>{{ $p->codigo_barra }}</td>
+                                <td>
+                                    {{ $p->descripcion }}
+                                    @if (!$manejaStock)
+                                        <small class="d-block text-muted">Sin control de stock</small>
+                                    @endif
+                                </td>
+                                <td class="text-end fw-semibold">Gs. {{ number_format($p->precio, 0, ',', '.') }}</td>
+                                <td class="text-center">
+                                    @if ($p->tasa_iva === 'E')
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary">Exenta</span>
+                                    @else
+                                        IVA {{ $p->tasa_iva }}%
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if ($activo)
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success">Activo</span>
+                                    @else
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger">Inactivo</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-warning btnEditar" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn {{ $activo ? 'btn-outline-danger' : 'btn-outline-success' }} btnEstado"
+                                            title="{{ $activo ? 'Desactivar' : 'Activar' }}">
+                                            <i class="fas {{ $activo ? 'fa-power-off' : 'fa-check' }}"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($productos->total() === 0)
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-boxes fs-1 d-block mb-2 opacity-50"></i>
+                    No se encontraron productos.
+                </div>
+            @else
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <small class="text-muted">
+                        Mostrando {{ $productos->firstItem() }}–{{ $productos->lastItem() }}
+                        de {{ number_format($productos->total(), 0, ',', '.') }} producto(s)
+                    </small>
+                    {{ $productos->links() }}
+                </div>
+            @endif
         </div>
     </div>
+
 </div>
 
 <!-- ===========================
@@ -137,142 +234,66 @@ MODAL PRODUCTO
     let timerBusqueda = null;
 
     /*
-     * Los productos llegan directamente desde el servidor vía PHP.
-     * La paginación y la búsqueda son locales (client-side), por lo que
-     * el manejo de registros es fluido y no depende de peticiones extra.
+     * Búsqueda y paginación del lado del servidor: cada página se consulta a la
+     * base de datos, por lo que el catálogo puede crecer (1000+) sin volcar
+     * todos los registros a la página al mismo tiempo.
      */
-    const productos = @json($productos);
-    const table = new Tabulator("#tablaProductos", {
-        data: productos,
-        index: "pro_cod",
-        layout: "fitColumns",
-        responsiveLayout: "collapse",
-        placeholder: "No existen productos registrados.",
-        height: "calc(100vh - 320px)",
-        minHeight: 300,
-        pagination: true,
-        paginationSize: 15,
-        paginationSizeSelector: [15, 30, 50, 100, 200],
-        paginationCounter: "rows",
-        paginationButtonCount: 5,
-        movableColumns: false,
-        columns: [{
-                title: "ID",
-                field: "pro_cod",
-                width: 70,
-                hozAlign: "center",
-                headerSort: true
-            },
-            {
-                title: "Código",
-                field: "codigo",
-                headerSort: true
-            },
-            {
-                title: "Código Barra",
-                field: "codigo_barra",
-                headerSort: true
-            },
-            {
-                title: "Descripción",
-                field: "descripcion",
-                headerSort: true,
-                minWidth: 200
-            },
-            {
-                title: "Precio",
-                field: "precio",
-                width: 140,
-                hozAlign: "right",
-                headerSort: true,
-                formatter: function(cell) {
-                    return "Gs. " + Number(cell.getValue() || 0)
-                        .toLocaleString("es-PY");
-                }
-            },
-            {
-                title: "IVA",
-                field: "tasa_iva",
-                width: 100,
-                hozAlign: "center",
-                formatter: function(cell) {
-                    return cell.getValue() === "E" ? "Exenta" : cell.getValue() + "%";
-                }
-            },
-            {
-                title: "Estado",
-                field: "activo",
-                width: 110,
-                hozAlign: "center",
-                formatter: function(cell) {
-                    return cell.getValue() == "S" ?
-                        "<span class='badge rounded-pill bg-success-subtle text-success border border-success'>Activo</span>" :
-                        "<span class='badge rounded-pill bg-danger-subtle text-danger border border-danger'>Inactivo</span>";
-                }
-            },
-            {
-                title: "Acciones",
-                width: 130,
-                hozAlign: "center",
-                widthShrink: 2,
-                formatter: function(cell) {
-                    const p = cell.getRow().getData();
-                    const esActivo = p.activo === "S";
-                    return `<div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-warning btnEditar" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn ${esActivo ? 'btn-outline-danger' : 'btn-outline-success'} btnEstado" title="${esActivo ? 'Desactivar' : 'Activar'}">
-                            <i class="fas ${esActivo ? 'fa-power-off' : 'fa-check'}"></i>
-                        </button>
-                    </div>`;
-                },
-                cellClick: function(e, cell) {
-                    const producto = cell.getRow().getData();
-                    if (e.target.closest(".btnEditar")) {
-                        editarProducto(producto);
-                    }
-                    if (e.target.closest(".btnEstado")) {
-                        cambiarEstado(producto);
-                    }
-                }
-            }
-        ]
-    });
+    const buscarProducto = document.getElementById('buscarProducto');
+    const porPagina = document.getElementById('porPagina');
 
-    /* Contador de registros visibles tras filtrar */
-    function actualizarContador() {
-        const count = table.getDataCount();
-        document.getElementById("totalRegistros").innerHTML =
-            count + " registro" + (count === 1 ? "" : "s");
+    function recargar() {
+        const url = new URL(window.location.href);
+        const q = buscarProducto.value.trim();
+        if (q) {
+            url.searchParams.set('q', q);
+        } else {
+            url.searchParams.delete('q');
+        }
+        url.searchParams.set('porPagina', porPagina.value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
     }
-    table.on("dataFiltered", actualizarContador);
-    actualizarContador();
 
-    /*
-     * Búsqueda local con debounce: filtra en memoria sin recargar el servidor.
-     * Con muchos registros sigue siendo fluido porque no hay round-trips.
-     */
-    const buscar = document.getElementById("buscarProducto");
-    buscar.addEventListener("keyup", function() {
+    buscarProducto.addEventListener('input', function () {
         clearTimeout(timerBusqueda);
-        const valor = this.value.trim().toLowerCase();
-        timerBusqueda = setTimeout(function() {
-            if (valor === "") {
-                table.clearFilter();
-            } else {
-                table.setFilter(function(data) {
-                    return (
-                        (data.descripcion ?? "").toLowerCase().includes(valor) ||
-                        (data.codigo ?? "").toLowerCase().includes(valor) ||
-                        (data.codigo_barra ?? "").toLowerCase().includes(valor)
-                    );
-                });
-            }
-        }, 300);
+        timerBusqueda = setTimeout(recargar, 400);
     });
 
-    /* AutoNumeric para el precio */
+    porPagina.addEventListener('change', recargar);
+
+    /* ======================================================
+       ACCIONES DE FILA (delegación de eventos)
+    ====================================================== */
+    const tabla = document.getElementById('tablaProductos');
+
+    tabla.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btnEditar, .btnEstado');
+        if (!btn) return;
+
+        const tr = btn.closest('tr');
+        const producto = {
+            pro_cod: tr.dataset.proCod,
+            codigo: tr.dataset.codigo || "",
+            codigo_barra: tr.dataset.codigoBarra,
+            descripcion: tr.dataset.descripcion,
+            precio: tr.dataset.precio,
+            tasa_iva: tr.dataset.tasaIva,
+            cantidad: tr.dataset.cantidad,
+            stock_minimo: tr.dataset.stockMinimo,
+            maneja_stock: tr.dataset.manejaStock,
+            activo: tr.dataset.activo
+        };
+
+        if (btn.classList.contains('btnEditar')) {
+            editarProducto(producto);
+        } else {
+            cambiarEstado(producto);
+        }
+    });
+
+    /* ======================================================
+       AUTONUMERIC
+    ====================================================== */
     new AutoNumeric('#precio', {
         digitGroupSeparator: '.',
         decimalCharacter: ',',
@@ -282,7 +303,6 @@ MODAL PRODUCTO
         minimumValue: '0'
     });
 
-    /* AutoNumeric para cantidad y stock mínimo */
     new AutoNumeric('#cantidad', {
         digitGroupSeparator: '.',
         decimalCharacter: ',',
@@ -310,7 +330,7 @@ MODAL PRODUCTO
 
     /* Antes de enviar, quitar formato numérico */
     const form = document.getElementById("frmProducto");
-    form.addEventListener("submit", function() {
+    form.addEventListener("submit", function () {
         const precio = AutoNumeric.getAutoNumericElement('#precio');
         if (precio) document.getElementById("precio").value = precio.getNumericString();
 
@@ -322,10 +342,10 @@ MODAL PRODUCTO
     });
 
     /* Alerta de éxito auto-cierre */
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const alerta = document.getElementById("mensajeSuccess");
         if (alerta) {
-            setTimeout(function() {
+            setTimeout(function () {
                 const bsAlert = bootstrap.Alert.getOrCreateInstance(alerta);
                 bsAlert.close();
             }, 3000);
@@ -337,12 +357,12 @@ MODAL PRODUCTO
     const txtCodigoBarra = document.querySelector('input[name="codigo_barra"]');
     const txtDescripcion = document.querySelector('input[name="descripcion"]');
 
-    modalProducto.addEventListener('shown.bs.modal', function() {
+    modalProducto.addEventListener('shown.bs.modal', function () {
         txtCodigoBarra.focus();
         txtCodigoBarra.select();
     });
 
-    txtCodigoBarra.addEventListener("keydown", function(e) {
+    txtCodigoBarra.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
             e.preventDefault();
             txtDescripcion.focus();
@@ -383,30 +403,31 @@ MODAL PRODUCTO
         bootstrap.Modal.getOrCreateInstance(modalProducto).show();
     }
 
-    async function cambiarEstado(producto) {
+    function cambiarEstado(producto) {
         const estadoActual = producto.activo === "S" ? "Activo" : "Inactivo";
         const nuevoEstado = producto.activo === "S" ? "Inactivo" : "Activo";
-        const ok = await confirmar({
-            titulo: `Cambiar estado del producto`,
+        confirmar({
+            titulo: 'Cambiar estado del producto',
             mensaje: `¿Desea cambiar el estado de "${producto.descripcion}" de ${estadoActual} a ${nuevoEstado}?`,
             acepText: `Sí, pasar a ${nuevoEstado}`,
             acepClase: "btn-primary",
             icono: "fa-arrows-rotate",
             iconoClase: "text-warning"
+        }).then(function (ok) {
+            if (!ok) {
+                return;
+            }
+            const f = document.createElement("form");
+            f.method = "POST";
+            f.action = "{{ route('productos.estado') }}";
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "pro_cod";
+            input.value = producto.pro_cod;
+            f.appendChild(input);
+            document.body.appendChild(f);
+            f.submit();
         });
-        if (!ok) {
-            return;
-        }
-        const f = document.createElement("form");
-        f.method = "POST";
-        f.action = "{{ route('productos.estado') }}";
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "pro_cod";
-        input.value = producto.pro_cod;
-        f.appendChild(input);
-        document.body.appendChild(f);
-        f.submit();
     }
 </script>
 @endsection

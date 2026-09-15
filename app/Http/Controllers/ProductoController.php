@@ -10,17 +10,39 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ProductoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $productos = DB::table('productos as p')
+        $porPagina = (int) $request->input('porPagina', 50);
+        if (!in_array($porPagina, [15, 30, 50, 100, 200], true)) {
+            $porPagina = 50;
+        }
+
+        $q = trim((string) $request->input('q', ''));
+
+        $query = DB::table('productos as p')
             ->select(
-                'p.*',
+                'p.pro_cod',
+                'p.codigo',
+                'p.codigo_barra',
+                'p.descripcion',
+                'p.precio',
+                'p.tasa_iva',
+                'p.activo',
+                'p.maneja_stock',
                 DB::raw('COALESCE(s.cantidad, 0) AS cantidad'),
                 DB::raw('COALESCE(s.stock_minimo, 0) AS stock_minimo')
             )
-            ->leftJoin('stock as s', 's.pro_cod', '=', 'p.pro_cod')
-            ->orderByDesc('p.pro_cod')
-            ->get();
+            ->leftJoin('stock as s', 's.pro_cod', '=', 'p.pro_cod');
+
+        if ($q !== '') {
+            $query->where(function ($where) use ($q) {
+                $where->where('p.descripcion', 'ilike', '%' . $q . '%')
+                    ->orWhere('p.codigo', 'ilike', '%' . $q . '%')
+                    ->orWhere('p.codigo_barra', 'ilike', '%' . $q . '%');
+            });
+        }
+
+        $productos = $query->orderByDesc('p.pro_cod')->paginate($porPagina)->withQueryString();
 
         return view('productos', ['productos' => $productos]);
     }

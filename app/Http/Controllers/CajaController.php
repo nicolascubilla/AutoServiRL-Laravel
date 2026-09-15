@@ -72,8 +72,13 @@ class CajaController extends Controller
         return redirect()->route('caja')->with('error', 'No fue posible cerrar la caja.');
     }
 
-    public function historial()
+    public function historial(Request $request)
     {
+        $porPagina = (int) $request->input('porPagina', 50);
+        if (!in_array($porPagina, [15, 30, 50, 100], true)) {
+            $porPagina = 50;
+        }
+
         $historialCajas = DB::table('cajas as c')
             ->select(
                 'c.caja_id',
@@ -91,7 +96,8 @@ class CajaController extends Controller
             ->where('c.estado', 'C')
             ->orderByDesc('c.fecha_cierre')
             ->orderByDesc('c.caja_id')
-            ->paginate(50);
+            ->paginate($porPagina)
+            ->withQueryString();
 
         return view('caja_historial', ['historialCajas' => $historialCajas]);
     }
